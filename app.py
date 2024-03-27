@@ -1,28 +1,44 @@
-#!/usr/bin/env python
-# coding: utf-8
+from flask import Flask,request,render_template
+import google.generativeai as palm
 
-# In[ ]:
-
-
-from flask import Flask, request, render_template
-from textblob import TextBlob
+model = {
+    "model": "models/chat-bison-001"
+}
+palm.configure(api_key="AIzaSyBg2qGeFDvTzKvQTpRffUiRjF7mMt6DCx8")
 
 app = Flask(__name__)
 
-@app.route("/", methods=["GET", "POST"])
+name=""
+flag=1
+
+@app.route("/",methods=["GET","POST"])
 def index():
     return(render_template("index.html"))
-    
-@app.route("/result", methods=["GET", "POST"])
-def result():
-    input = request.form.get("input")
-    result = TextBlob(input).sentiment
-    return(render_template("result.html", result=result))
 
-@app.route("/end", methods=["GET", "POST"])
+@app.route("/main",methods=["GET","POST"])
+def main():
+    global name,flag
+    if flag==1:
+        name = request.form.get("q")
+        flag=0
+    return(render_template("main.html",r=name))
+
+@app.route("/text",methods=["GET","POST"])
+def text():
+    return(render_template("text.html"))
+
+@app.route("/text_reply",methods=["GET","POST"])
+def text_reply():
+    q = request.form.get("q")
+    r = palm.chat(**model, messages=q)
+    return(render_template("text_reply.html",r=r.last))
+           
+@app.route("/end",methods=["GET","POST"])
 def end():
-    return(render_template("end.html"))
-
+    global flag
+    print("Ended")
+    flag=1
+    return(render_template("index.html"))
+    
 if __name__ == "__main__":
     app.run()
-
